@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vuln-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vuln-app
+  template:
+    metadata:
+      labels:
+        app: vuln-app
+    spec:
+      containers:
+        - name: app
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/secrets"
+              name: secrets
+          securityContext:
+            runAsUser: 0
+      volumes:
+        - name: secrets
+          hostPath:
+            path: /etc/secrets
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vuln-service
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: vuln-app
